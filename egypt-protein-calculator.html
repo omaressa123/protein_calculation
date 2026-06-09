@@ -1,0 +1,1222 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>حاسبة البروتين | Egypt Protein Calculator</title>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:        #0d0c09;
+    --surface:   #161410;
+    --card:      #1e1c17;
+    --card-hover:#232019;
+    --border:    #2c2921;
+    --border-hi: #3d3828;
+    --gold:      #d4a93a;
+    --gold-dim:  #7a5f0f;
+    --gold-glow: rgba(212,169,58,.12);
+    --red:       #c94f27;
+    --green:     #5aab6e;
+    --purple:    #a98be8;
+    --text:      #ede5d4;
+    --text-dim:  #b8ad9a;
+    --muted:     #6e6657;
+    --tag-bg:    #272420;
+    --font-ar: 'Cairo', sans-serif;
+    --font-mono: 'DM Mono', monospace;
+    --radius-sm: 8px;
+    --radius-md: 12px;
+    --radius-lg: 16px;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-ar);
+    min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ── LANGUAGE TOGGLE ── */
+  #lang-toggle {
+    position: fixed;
+    top: 16px;
+    left: 16px;
+    z-index: 100;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 28px;
+    padding: 5px;
+    display: flex;
+    gap: 3px;
+    box-shadow: 0 4px 20px rgba(0,0,0,.4);
+  }
+  #lang-toggle button {
+    background: none;
+    border: none;
+    color: var(--muted);
+    font-family: var(--font-ar);
+    font-size: 0.78rem;
+    font-weight: 700;
+    padding: 6px 16px;
+    border-radius: 22px;
+    cursor: pointer;
+    transition: all .2s;
+    letter-spacing: .04em;
+  }
+  #lang-toggle button.active {
+    background: var(--gold);
+    color: #0d0c09;
+  }
+
+  /* ── HERO ── */
+  .hero {
+    text-align: center;
+    padding: 90px 20px 44px;
+    position: relative;
+    overflow: hidden;
+  }
+  .hero::before {
+    content: '';
+    position: absolute;
+    top: -60px; left: 50%; transform: translateX(-50%);
+    width: 600px; height: 350px;
+    background: radial-gradient(ellipse at center, rgba(212,169,58,.13) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .hero-eyebrow {
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    letter-spacing: .2em;
+    color: var(--gold);
+    text-transform: uppercase;
+    margin-bottom: 18px;
+    opacity: .8;
+  }
+  .hero-title {
+    font-size: clamp(2.2rem, 6vw, 3.8rem);
+    font-weight: 900;
+    line-height: 1.1;
+    letter-spacing: -.02em;
+    margin-bottom: 14px;
+  }
+  .hero-title span { color: var(--gold); }
+  .hero-sub {
+    color: var(--muted);
+    font-size: 0.93rem;
+    max-width: 420px;
+    margin: 0 auto 40px;
+    line-height: 1.75;
+  }
+
+  /* ── STATS BAR ── */
+  .stats-bar {
+    display: flex;
+    justify-content: center;
+    gap: 3px;
+    padding: 0 20px 52px;
+    flex-wrap: wrap;
+  }
+  .stat-chip {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 14px 22px;
+    text-align: center;
+    min-width: 120px;
+    flex: 1;
+    max-width: 190px;
+    transition: border-color .2s;
+  }
+  .stat-chip:hover { border-color: var(--border-hi); }
+  .stat-chip .val {
+    font-family: var(--font-mono);
+    font-size: 1.65rem;
+    font-weight: 500;
+    color: var(--gold);
+    display: block;
+    line-height: 1;
+  }
+  .stat-chip .lbl {
+    font-size: 0.68rem;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: .1em;
+    margin-top: 5px;
+  }
+
+  /* ── LAYOUT ── */
+  .layout {
+    max-width: 1120px;
+    margin: 0 auto;
+    padding: 0 20px 100px;
+    display: grid;
+    grid-template-columns: 1fr 350px;
+    gap: 24px;
+    align-items: start;
+  }
+  @media (max-width: 820px) {
+    .layout { grid-template-columns: 1fr; }
+  }
+
+  /* ── SECTION LABEL ── */
+  .section-label {
+    font-family: var(--font-mono);
+    font-size: 0.63rem;
+    letter-spacing: .18em;
+    color: var(--gold-dim);
+    text-transform: uppercase;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .section-label::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  /* ── SEARCH ── */
+  .search-wrap {
+    position: relative;
+    margin-bottom: 18px;
+  }
+  .search-wrap svg {
+    position: absolute;
+    top: 50%; transform: translateY(-50%);
+    right: 14px;
+    color: var(--muted);
+    pointer-events: none;
+    transition: color .2s;
+  }
+  html[dir="ltr"] .search-wrap svg { right: auto; left: 14px; }
+  .search-wrap:focus-within svg { color: var(--gold-dim); }
+  #search-input {
+    width: 100%;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    color: var(--text);
+    font-family: var(--font-ar);
+    font-size: 0.92rem;
+    padding: 13px 44px 13px 16px;
+    outline: none;
+    transition: border-color .2s, box-shadow .2s;
+  }
+  html[dir="ltr"] #search-input { padding: 13px 16px 13px 44px; }
+  #search-input:focus {
+    border-color: var(--gold-dim);
+    box-shadow: 0 0 0 3px rgba(212,169,58,.08);
+  }
+  #search-input::placeholder { color: var(--muted); }
+
+  /* ── CATEGORY FILTERS ── */
+  .filters {
+    display: flex;
+    gap: 7px;
+    flex-wrap: wrap;
+    margin-bottom: 24px;
+  }
+  .filter-btn {
+    background: var(--tag-bg);
+    border: 1px solid var(--border);
+    border-radius: 22px;
+    color: var(--muted);
+    font-family: var(--font-ar);
+    font-size: 0.77rem;
+    font-weight: 600;
+    padding: 5px 14px;
+    cursor: pointer;
+    transition: all .18s;
+  }
+  .filter-btn:hover {
+    border-color: var(--gold-dim);
+    color: var(--text-dim);
+  }
+  .filter-btn.active {
+    background: var(--gold);
+    border-color: var(--gold);
+    color: #0d0c09;
+  }
+
+  /* ── FOOD GRID ── */
+  .food-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(195px, 1fr));
+    gap: 11px;
+  }
+
+  .food-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 15px 15px 13px;
+    cursor: pointer;
+    transition: border-color .2s, transform .15s, box-shadow .2s, background .2s;
+    position: relative;
+    user-select: none;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+  }
+  .food-card:hover {
+    border-color: var(--border-hi);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(0,0,0,.35);
+    background: var(--card-hover);
+  }
+  .food-card.selected {
+    border-color: var(--gold);
+    background: #1f1c13;
+    box-shadow: 0 0 0 1px var(--gold-dim), 0 6px 20px rgba(212,169,58,.12);
+  }
+  .food-card.selected::after {
+    content: '✓';
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    width: 20px; height: 20px;
+    background: var(--gold);
+    color: #0d0c09;
+    border-radius: 50%;
+    font-size: 0.68rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 900;
+    line-height: 20px;
+    text-align: center;
+  }
+  html[dir="ltr"] .food-card.selected::after { left: auto; right: 10px; }
+
+  .food-emoji { font-size: 1.8rem; margin-bottom: 8px; line-height: 1; }
+  .food-name {
+    font-size: 0.87rem;
+    font-weight: 700;
+    line-height: 1.35;
+    margin-bottom: 3px;
+    color: var(--text);
+  }
+  .food-name-en {
+    font-size: 0.7rem;
+    color: var(--muted);
+    margin-bottom: 11px;
+    line-height: 1.3;
+  }
+
+  /* ── MACRO TAGS ── */
+  .food-macros {
+    display: flex;
+    gap: 5px;
+    flex-wrap: wrap;
+    margin-top: auto;
+  }
+  .macro-tag {
+    font-family: var(--font-mono);
+    font-size: 0.63rem;
+    padding: 3px 7px;
+    border-radius: 5px;
+    font-weight: 500;
+    white-space: nowrap;
+    letter-spacing: .01em;
+  }
+  .macro-tag.protein { background: rgba(90,171,110,.16); color: #5aab6e; border: 1px solid rgba(90,171,110,.2); }
+  .macro-tag.cal     { background: rgba(212,169,58,.13);  color: var(--gold); border: 1px solid rgba(212,169,58,.2); }
+  .macro-tag.kcalg   { background: rgba(169,139,232,.13); color: var(--purple); border: 1px solid rgba(169,139,232,.2); }
+
+  /* ── SIDEBAR ── */
+  .sidebar { position: sticky; top: 20px; }
+
+  .panel {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 22px;
+    margin-bottom: 14px;
+  }
+  .panel h3 {
+    font-size: 0.88rem;
+    font-weight: 700;
+    margin-bottom: 18px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--text);
+    letter-spacing: .01em;
+  }
+  .panel h3 .icon { font-size: 1.05rem; }
+
+  /* ── SELECTED LIST ── */
+  #selected-list { list-style: none; }
+  #selected-list li {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border);
+    gap: 8px;
+    font-size: 0.81rem;
+    transition: background .15s;
+  }
+  #selected-list li:last-child { border-bottom: none; }
+  #selected-list li:first-child { padding-top: 2px; }
+  .sel-info { flex: 1; min-width: 0; }
+  .sel-name { line-height: 1.35; font-weight: 600; margin-bottom: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .sel-macros {
+    font-family: var(--font-mono);
+    font-size: 0.63rem;
+    color: var(--muted);
+    display: flex;
+    gap: 4px;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+  .sel-macro-protein { color: var(--green); }
+  .sel-macro-cal     { color: var(--gold); }
+  .sel-macro-sep     { color: var(--border-hi); }
+
+  .sel-right {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-shrink: 0;
+  }
+  .weight-input-wrap {
+    display: flex;
+    align-items: center;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 7px;
+    overflow: hidden;
+    transition: border-color .2s;
+  }
+  .weight-input-wrap:focus-within {
+    border-color: var(--gold-dim);
+    box-shadow: 0 0 0 2px rgba(212,169,58,.08);
+  }
+  .weight-input {
+    background: transparent;
+    border: none;
+    color: var(--text);
+    font-family: var(--font-mono);
+    font-size: 0.82rem;
+    font-weight: 500;
+    width: 52px;
+    padding: 5px 6px;
+    outline: none;
+    text-align: center;
+    -moz-appearance: textfield;
+  }
+  .weight-input::-webkit-inner-spin-button,
+  .weight-input::-webkit-outer-spin-button { -webkit-appearance: none; }
+  .weight-unit {
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    color: var(--muted);
+    padding: 0 7px 0 2px;
+    white-space: nowrap;
+  }
+  .del-btn {
+    background: none;
+    border: none;
+    color: var(--border-hi);
+    cursor: pointer;
+    font-size: 0.8rem;
+    padding: 3px 5px;
+    border-radius: 4px;
+    transition: color .15s;
+    line-height: 1;
+  }
+  .del-btn:hover { color: var(--red); }
+
+  #empty-msg {
+    color: var(--muted);
+    font-size: 0.78rem;
+    text-align: center;
+    padding: 24px 0 8px;
+    line-height: 1.7;
+  }
+  #empty-msg .empty-icon { font-size: 1.8rem; display: block; margin-bottom: 8px; opacity: .4; }
+
+  /* ── TOTALS ── */
+  .totals-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-top: 4px;
+  }
+  .total-box {
+    background: var(--tag-bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 14px 12px;
+    text-align: center;
+    transition: border-color .2s;
+  }
+  .total-box:hover { border-color: var(--border-hi); }
+  .total-box .t-val {
+    font-family: var(--font-mono);
+    font-size: 1.45rem;
+    font-weight: 500;
+    display: block;
+    line-height: 1;
+  }
+  .total-box .t-lbl {
+    font-size: 0.65rem;
+    color: var(--muted);
+    letter-spacing: .09em;
+    margin-top: 5px;
+    text-transform: uppercase;
+  }
+  .total-box.protein  .t-val { color: var(--green); }
+  .total-box.calories .t-val { color: var(--gold); }
+  .total-box.density  .t-val { color: var(--purple); }
+
+  /* ── ADD DISH FORM ── */
+  .form-field { margin-bottom: 13px; }
+  .form-field label {
+    display: block;
+    font-size: 0.72rem;
+    color: var(--muted);
+    margin-bottom: 6px;
+    letter-spacing: .06em;
+    font-weight: 600;
+  }
+  .form-field input {
+    width: 100%;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    color: var(--text);
+    font-family: var(--font-ar);
+    font-size: 0.87rem;
+    padding: 9px 12px;
+    outline: none;
+    transition: border-color .2s, box-shadow .2s;
+  }
+  .form-field input:focus {
+    border-color: var(--gold-dim);
+    box-shadow: 0 0 0 3px rgba(212,169,58,.07);
+  }
+  .form-field input::placeholder { color: var(--muted); }
+
+  .form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+  .form-row-3 {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 10px;
+  }
+
+  .add-btn {
+    width: 100%;
+    background: var(--gold);
+    border: none;
+    border-radius: var(--radius-sm);
+    color: #0d0c09;
+    font-family: var(--font-ar);
+    font-size: 0.88rem;
+    font-weight: 800;
+    padding: 12px;
+    cursor: pointer;
+    transition: opacity .18s, transform .12s, box-shadow .18s;
+    margin-top: 6px;
+    letter-spacing: .03em;
+  }
+  .add-btn:hover { opacity: .88; box-shadow: 0 4px 16px rgba(212,169,58,.3); }
+  .add-btn:active { transform: scale(.98); }
+
+  .cat-select {
+    width: 100%;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    color: var(--text);
+    font-family: var(--font-ar);
+    font-size: 0.87rem;
+    padding: 9px 12px;
+    outline: none;
+    appearance: none;
+    cursor: pointer;
+    transition: border-color .2s;
+  }
+  .cat-select:focus { border-color: var(--gold-dim); }
+
+  /* ── DENSITY HINT ── */
+  .density-hint {
+    background: rgba(169,139,232,.08);
+    border: 1px solid rgba(169,139,232,.18);
+    border-radius: var(--radius-sm);
+    padding: 9px 12px;
+    margin-top: 8px;
+    font-size: 0.7rem;
+    color: var(--purple);
+    line-height: 1.6;
+    display: none;
+  }
+  .density-hint.visible { display: block; }
+
+  /* ── TOAST ── */
+  .toast {
+    position: fixed;
+    bottom: 28px;
+    left: 50%;
+    transform: translateX(-50%) translateY(70px);
+    background: var(--green);
+    color: #0d0c09;
+    font-family: var(--font-ar);
+    font-size: 0.84rem;
+    font-weight: 700;
+    padding: 11px 28px;
+    border-radius: 40px;
+    transition: transform .32s cubic-bezier(.22,1,.36,1), opacity .32s;
+    opacity: 0;
+    pointer-events: none;
+    z-index: 200;
+    box-shadow: 0 4px 20px rgba(0,0,0,.5);
+  }
+  .toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+
+  /* ── NO RESULTS ── */
+  .no-results {
+    color: var(--muted);
+    text-align: center;
+    padding: 56px 20px;
+    font-size: 0.88rem;
+    grid-column: 1/-1;
+    display: none;
+    line-height: 1.7;
+  }
+  .no-results .nr-icon { font-size: 2.2rem; display: block; margin-bottom: 10px; opacity: .35; }
+
+  /* ── CARD DELETE BTN (custom foods) ── */
+  .card-del-btn {
+    position: absolute;
+    top: 8px;
+    left: 8px;
+    background: rgba(201,79,39,.15);
+    border: 1px solid rgba(201,79,39,.25);
+    color: var(--red);
+    width: 20px; height: 20px;
+    border-radius: 5px;
+    font-size: 0.6rem;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: background .15s, opacity .15s;
+    opacity: 0;
+    z-index: 2;
+  }
+  html[dir="ltr"] .card-del-btn { left: auto; right: 8px; }
+  .food-card:hover .card-del-btn { opacity: 1; }
+  .card-del-btn:hover { background: rgba(201,79,39,.35); }
+
+  /* ── GYM CATEGORY BADGE ── */
+  .filter-btn[data-cat="gym"] {
+    border-color: rgba(90,171,110,.3);
+  }
+  .filter-btn[data-cat="gym"].active {
+    background: var(--green);
+    border-color: var(--green);
+    color: #0d0c09;
+  }
+  .food-card[data-cat="gym"] {
+    border-color: rgba(90,171,110,.2);
+  }
+  .food-card[data-cat="gym"]:hover {
+    border-color: rgba(90,171,110,.5);
+  }
+  .food-card[data-cat="gym"].selected {
+    border-color: var(--green);
+    box-shadow: 0 0 0 1px rgba(90,171,110,.3), 0 6px 20px rgba(90,171,110,.1);
+  }
+  .food-card[data-cat="gym"].selected::after {
+    background: var(--green);
+  }
+
+  /* ── CUSTOM FOOD INDICATOR ── */
+  .custom-badge {
+    position: absolute;
+    bottom: 10px;
+    left: 10px;
+    font-size: 0.55rem;
+    font-family: var(--font-mono);
+    color: var(--gold-dim);
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    opacity: .7;
+  }
+  html[dir="ltr"] .custom-badge { left: auto; right: 10px; }
+
+  /* ── SCROLLBAR ── */
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--border-hi); }
+
+  /* ── DIVIDER ── */
+  .divider { height: 1px; background: var(--border); margin: 16px 0; }
+</style>
+</head>
+<body>
+
+<!-- Language Toggle -->
+<div id="lang-toggle">
+  <button onclick="setLang('ar')" id="btn-ar" class="active">عربي</button>
+  <button onclick="setLang('en')" id="btn-en">EN</button>
+</div>
+
+<!-- Hero -->
+<header class="hero">
+  <div class="hero-eyebrow" data-ar="المطبخ المصري" data-en="Egyptian Cuisine">المطبخ المصري</div>
+  <h1 class="hero-title">
+    <span data-ar="حاسبة" data-en="Protein &">حاسبة</span><br>
+    <span data-ar="البروتين والسعرات" data-en="Calorie Counter">البروتين والسعرات</span>
+  </h1>
+  <p class="hero-sub"
+     data-ar="تتبع البروتين والسعرات الحرارية في أكلاتك المصرية المفضلة. اختر أطباقك وابني وجبتك."
+     data-en="Track protein and calories in your favorite Egyptian dishes. Pick your plates and build your meal.">
+    تتبع البروتين والسعرات الحرارية في أكلاتك المصرية المفضلة. اختر أطباقك وابني وجبتك.
+  </p>
+</header>
+
+<!-- Stats Bar -->
+<div class="stats-bar">
+  <div class="stat-chip">
+    <span class="val" id="stat-dishes">30</span>
+    <span class="lbl" data-ar="طبق متاح" data-en="Dishes">طبق متاح</span>
+  </div>
+  <div class="stat-chip">
+    <span class="val" id="stat-selected">0</span>
+    <span class="lbl" data-ar="مختار" data-en="Selected">مختار</span>
+  </div>
+  <div class="stat-chip">
+    <span class="val" id="stat-protein">0g</span>
+    <span class="lbl" data-ar="بروتين" data-en="Protein">بروتين</span>
+  </div>
+  <div class="stat-chip">
+    <span class="val" id="stat-cal">0</span>
+    <span class="lbl" data-ar="سعرة حرارية" data-en="Calories">سعرة حرارية</span>
+  </div>
+</div>
+
+<!-- Main Layout -->
+<div class="layout">
+
+  <!-- Left: Food Grid -->
+  <div>
+    <div class="section-label" data-ar="— الأطباق المتاحة" data-en="— AVAILABLE DISHES">— الأطباق المتاحة</div>
+
+    <div class="search-wrap">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+      </svg>
+      <input type="text" id="search-input" placeholder="ابحث عن طبق..." data-ph-ar="ابحث عن طبق..." data-ph-en="Search a dish...">
+    </div>
+
+    <div class="filters" id="filters"></div>
+
+    <div class="food-grid" id="food-grid">
+      <div class="no-results" id="no-results" data-ar="لا توجد نتائج" data-en="No results found">
+        <span class="nr-icon">🔍</span>لا توجد نتائج
+      </div>
+    </div>
+  </div>
+
+  <!-- Right: Sidebar -->
+  <div class="sidebar">
+
+    <!-- Selected Plate -->
+    <div class="panel">
+      <h3>
+        <span class="icon">🍽</span>
+        <span data-ar="طبقي" data-en="My Plate">طبقي</span>
+      </h3>
+      <ul id="selected-list"></ul>
+      <p id="empty-msg" data-ar="اختر أطباقاً من القائمة" data-en="Pick dishes from the list">
+        <span class="empty-icon">🥗</span>اختر أطباقاً من القائمة
+      </p>
+    </div>
+
+    <!-- Totals -->
+    <div class="panel">
+      <h3>
+        <span class="icon">📊</span>
+        <span data-ar="الإجماليات" data-en="Totals">الإجماليات</span>
+      </h3>
+      <div class="totals-grid">
+        <div class="total-box protein">
+          <span class="t-val" id="total-protein">0g</span>
+          <div class="t-lbl" data-ar="بروتين" data-en="Protein">بروتين</div>
+        </div>
+        <div class="total-box calories">
+          <span class="t-val" id="total-cal">0</span>
+          <div class="t-lbl" data-ar="سعرة" data-en="Calories">سعرة</div>
+        </div>
+        <div class="total-box density" style="grid-column:1/-1">
+          <span class="t-val" id="total-density">—</span>
+          <div class="t-lbl" data-ar="كثافة سعرية متوسطة (kcal/100g)" data-en="Avg Calorie Density (kcal/100g)">كثافة سعرية متوسطة (kcal/100g)</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Add Dish -->
+    <div class="panel">
+      <h3>
+        <span class="icon">➕</span>
+        <span data-ar="أضف طبقاً جديداً" data-en="Add New Dish">أضف طبقاً جديداً</span>
+      </h3>
+
+      <div class="form-field">
+        <label data-ar="اسم الطبق (عربي)" data-en="Dish Name (Arabic)">اسم الطبق (عربي)</label>
+        <input type="text" id="f-name-ar" placeholder="مثال: كشري" data-ph-ar="مثال: كشري" data-ph-en="e.g. Koshari">
+      </div>
+      <div class="form-field">
+        <label data-ar="الاسم بالإنجليزية" data-en="Name in English">الاسم بالإنجليزية</label>
+        <input type="text" id="f-name-en" placeholder="e.g. Koshari">
+      </div>
+      <div class="form-row">
+        <div class="form-field">
+          <label data-ar="بروتين (جم)" data-en="Protein (g)">بروتين (جم)</label>
+          <input type="number" id="f-protein" placeholder="0" min="0">
+        </div>
+        <div class="form-field">
+          <label data-ar="سعرات" data-en="Calories">سعرات</label>
+          <input type="number" id="f-cal" placeholder="0" min="0" oninput="previewDensity()">
+        </div>
+      </div>
+      <div class="form-field">
+        <label data-ar="الوزن (جم/حصة)" data-en="Weight (g/serving)">الوزن (جم/حصة)</label>
+        <input type="number" id="f-weight" placeholder="0" min="0" oninput="previewDensity()">
+      </div>
+      <div id="density-preview" class="density-hint"></div>
+      <div class="form-field">
+        <label data-ar="الإيموجي" data-en="Emoji">الإيموجي</label>
+        <input type="text" id="f-emoji" placeholder="🥘" maxlength="4">
+      </div>
+      <div class="form-field">
+        <label data-ar="التصنيف" data-en="Category">التصنيف</label>
+        <select id="f-cat" class="cat-select"></select>
+      </div>
+      <button class="add-btn" onclick="addDish()" data-ar="إضافة الطبق" data-en="Add Dish">إضافة الطبق</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ─── DATA ───────────────────────────────────────────────────────────────────
+const CATEGORIES = {
+  all:     { ar: 'الكل',         en: 'All'          },
+  gym:     { ar: '💪 جيم',       en: '💪 Gym Foods' },
+  main:    { ar: 'أطباق رئيسية', en: 'Main Dishes'  },
+  street:  { ar: 'أكل شارع',     en: 'Street Food'  },
+  soup:    { ar: 'شوربة',        en: 'Soups'        },
+  snack:   { ar: 'سناكس',        en: 'Snacks'       },
+  dessert: { ar: 'حلويات',       en: 'Desserts'     },
+  drink:   { ar: 'مشروبات',      en: 'Drinks'       },
+};
+
+// weight = grams per typical serving
+let foods = [
+  // Main Dishes
+  { id:1,  emoji:'🍛', ar:'كشري',            en:'Koshari',              protein:11, cal:490, weight:350, cat:'main'    },
+  { id:2,  emoji:'🐔', ar:'فراخ مشوية',       en:'Grilled Chicken',      protein:42, cal:320, weight:200, cat:'main'    },
+  { id:3,  emoji:'🥩', ar:'كباب',             en:'Kofta/Kebab',          protein:28, cal:380, weight:200, cat:'main'    },
+  { id:4,  emoji:'🐟', ar:'سمك بلطي مقلي',    en:'Fried Tilapia',        protein:34, cal:290, weight:220, cat:'main'    },
+  { id:5,  emoji:'🍖', ar:'شاورما لحم',       en:'Beef Shawarma',        protein:25, cal:420, weight:220, cat:'main'    },
+  { id:6,  emoji:'🥘', ar:'ملوخية بالأرانب',  en:'Molokhia w/ Rabbit',   protein:30, cal:340, weight:300, cat:'main'    },
+  { id:7,  emoji:'🫘', ar:'فول مدمس',         en:'Ful Medames',          protein:13, cal:210, weight:250, cat:'main'    },
+  { id:8,  emoji:'🍳', ar:'بيض بالبسطرمة',   en:'Eggs & Pastrami',      protein:18, cal:260, weight:180, cat:'main'    },
+  { id:9,  emoji:'🥩', ar:'لحمة بانيه',       en:'Breaded Veal',         protein:32, cal:440, weight:220, cat:'main'    },
+  { id:10, emoji:'🍗', ar:'حمام محشي',        en:'Stuffed Pigeon',       protein:28, cal:370, weight:250, cat:'main'    },
+  { id:11, emoji:'🐓', ar:'فراخ بانيه',       en:'Chicken Schnitzel',    protein:30, cal:410, weight:220, cat:'main'    },
+  { id:12, emoji:'🍚', ar:'أرز باللبن',       en:'Rice Pudding',         protein:6,  cal:220, weight:200, cat:'main'    },
+  // Street Food
+  { id:13, emoji:'🧆', ar:'فلافل (طعمية)',    en:"Ta'ameya (Falafel)",   protein:8,  cal:200, weight:120, cat:'street'  },
+  { id:14, emoji:'🥙', ar:'كفتة في عيش',      en:'Kofta Sandwich',       protein:22, cal:380, weight:220, cat:'street'  },
+  { id:15, emoji:'🌯', ar:'حواوشي',           en:'Hawawshi',             protein:24, cal:450, weight:250, cat:'street'  },
+  { id:16, emoji:'🧀', ar:'فتير بالجبن',      en:'Feteer w/ Cheese',     protein:14, cal:520, weight:300, cat:'street'  },
+  { id:17, emoji:'🥙', ar:'كبدة إسكندراني',   en:'Alex-style Liver',     protein:26, cal:310, weight:200, cat:'street'  },
+  { id:18, emoji:'🥪', ar:'بيض بالسجق',       en:'Egg & Sausage Sammie', protein:16, cal:290, weight:200, cat:'street'  },
+  // Soups
+  { id:19, emoji:'🍲', ar:'شوربة عدس',        en:'Lentil Soup',          protein:9,  cal:180, weight:300, cat:'soup'    },
+  { id:20, emoji:'🍵', ar:'شوربة خضار',        en:'Vegetable Soup',       protein:4,  cal:120, weight:300, cat:'soup'    },
+  { id:21, emoji:'🥣', ar:'شوربة فراخ',        en:'Chicken Soup',         protein:14, cal:160, weight:300, cat:'soup'    },
+  // Snacks
+  { id:22, emoji:'🫙', ar:'ترمس',             en:'Lupini Beans',         protein:10, cal:140, weight:100, cat:'snack'   },
+  { id:23, emoji:'🥜', ar:'فول سوداني محمص',  en:'Roasted Peanuts',      protein:13, cal:280, weight:80,  cat:'snack'   },
+  { id:24, emoji:'🧇', ar:'عيش بالزبدة',      en:'Bread & Butter',       protein:5,  cal:220, weight:80,  cat:'snack'   },
+  // Desserts
+  { id:25, emoji:'🍮', ar:'أم علي',           en:'Om Ali',               protein:9,  cal:410, weight:200, cat:'dessert' },
+  { id:26, emoji:'🍯', ar:'بسبوسة',           en:'Basbousa',             protein:5,  cal:320, weight:120, cat:'dessert' },
+  { id:27, emoji:'🧁', ar:'كنافة',            en:'Kunafa',               protein:7,  cal:430, weight:150, cat:'dessert' },
+  { id:28, emoji:'🍩', ar:'لقيمات',           en:'Luqaimat',             protein:4,  cal:350, weight:120, cat:'dessert' },
+  // Drinks
+  { id:29, emoji:'🧃', ar:'عصير قصب',         en:'Sugarcane Juice',      protein:0,  cal:110, weight:250, cat:'drink'   },
+  { id:30, emoji:'🫖', ar:'كركديه',           en:'Hibiscus Tea',         protein:0,  cal:30,  weight:250, cat:'drink'   },
+  // Gym Foods
+  { id:31, emoji:'🥚', ar:'بيض مسلوق',        en:'Boiled Eggs',          protein:13, cal:155, weight:100, cat:'gym'     },
+  { id:32, emoji:'🥣', ar:'شوفان (أوتميل)',    en:'Oatmeal',              protein:17, cal:389, weight:100, cat:'gym'     },
+  { id:33, emoji:'🧀', ar:'جبن قريش (كوتج)',   en:'Cottage Cheese',       protein:11, cal:98,  weight:100, cat:'gym'     },
+  { id:34, emoji:'🍗', ar:'صدر فراخ مسلوق',   en:'Boiled Chicken Breast',protein:31, cal:165, weight:100, cat:'gym'     },
+  { id:35, emoji:'🥛', ar:'زبادي يوناني',      en:'Greek Yogurt',         protein:10, cal:97,  weight:100, cat:'gym'     },
+  { id:36, emoji:'🐟', ar:'تونة بالماء',       en:'Canned Tuna (water)',  protein:26, cal:116, weight:100, cat:'gym'     },
+  { id:37, emoji:'🥩', ar:'لحمة مفرومة قليلة الدهن', en:'Lean Ground Beef', protein:26, cal:215, weight:100, cat:'gym' },
+  { id:38, emoji:'🫙', ar:'زبدة الفول السوداني', en:'Peanut Butter',      protein:25, cal:588, weight:100, cat:'gym'     },
+  { id:39, emoji:'🍌', ar:'موزة',              en:'Banana',               protein:1,  cal:89,  weight:100, cat:'gym'     },
+  { id:40, emoji:'🫐', ar:'توت أزرق',          en:'Blueberries',          protein:1,  cal:57,  weight:100, cat:'gym'     },
+  { id:41, emoji:'🥜', ar:'لوز',               en:'Almonds',              protein:21, cal:579, weight:100, cat:'gym'     },
+  { id:42, emoji:'🥛', ar:'بروتين واي (مسحوق)', en:'Whey Protein Powder', protein:80, cal:400, weight:100, cat:'gym'     },
+  { id:43, emoji:'🍚', ar:'أرز أبيض مطبوخ',   en:'White Rice (cooked)',   protein:3,  cal:130, weight:100, cat:'gym'     },
+  { id:44, emoji:'🍠', ar:'بطاطا حلوة',        en:'Sweet Potato',         protein:2,  cal:86,  weight:100, cat:'gym'     },
+  { id:45, emoji:'🥦', ar:'بروكلي',            en:'Broccoli',             protein:3,  cal:34,  weight:100, cat:'gym'     },
+  { id:46, emoji:'🫘', ar:'عدس مسلوق',         en:'Cooked Lentils',       protein:9,  cal:116, weight:100, cat:'gym'     },
+  { id:47, emoji:'🧆', ar:'حمص بالطحينة',      en:'Hummus',               protein:8,  cal:177, weight:100, cat:'gym'     },
+  { id:48, emoji:'🥛', ar:'حليب كامل الدسم',   en:'Whole Milk',           protein:3,  cal:61,  weight:100, cat:'gym'     },
+  { id:49, emoji:'🫙', ar:'جبن قريش بالعسل',   en:'Cottage Cheese & Honey',protein:10, cal:120, weight:100, cat:'gym'    },
+  { id:50, emoji:'🥗', ar:'سلطة تونة',         en:'Tuna Salad',           protein:20, cal:180, weight:150, cat:'gym'     },
+];
+
+let selected = {};
+let currentLang = 'ar';
+let currentCat = 'all';
+let nextId = 200; // custom foods start at 200
+
+// ─── PERSIST CUSTOM FOODS ────────────────────────────────────────────────────
+const STORAGE_KEY = 'egypt_calc_custom_foods';
+
+function loadCustomFoods() {
+  try {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (saved) {
+      const custom = JSON.parse(saved);
+      custom.forEach(f => {
+        if (!foods.find(x => x.id === f.id)) foods.push(f);
+        if (f.id >= nextId) nextId = f.id + 1;
+      });
+    }
+  } catch(e) {}
+}
+
+function saveCustomFoods() {
+  try {
+    const custom = foods.filter(f => f.id >= 200);
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(custom));
+  } catch(e) {}
+}
+
+// ─── kcal/100g helper ────────────────────────────────────────────────────────
+function calPer100g(f) {
+  if (!f.weight || f.weight === 0) return null;
+  return Math.round((f.cal / f.weight) * 100);
+}
+
+// ─── LANGUAGE ────────────────────────────────────────────────────────────────
+function setLang(lang) {
+  currentLang = lang;
+  document.documentElement.lang = lang;
+  document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr';
+  document.getElementById('btn-ar').classList.toggle('active', lang === 'ar');
+  document.getElementById('btn-en').classList.toggle('active', lang === 'en');
+
+  document.querySelectorAll('[data-ar]').forEach(el => {
+    el.textContent = lang === 'ar' ? el.dataset.ar : el.dataset.en;
+  });
+  document.querySelectorAll('[data-ph-ar]').forEach(el => {
+    el.placeholder = lang === 'ar' ? el.dataset.phAr : el.dataset.phEn;
+  });
+  buildCategorySelect();
+  renderFilters();
+  renderGrid();
+  renderSelected();
+}
+
+// ─── CATEGORIES ──────────────────────────────────────────────────────────────
+function catLabel(key) {
+  return currentLang === 'ar' ? CATEGORIES[key].ar : CATEGORIES[key].en;
+}
+
+function renderFilters() {
+  const el = document.getElementById('filters');
+  el.innerHTML = Object.keys(CATEGORIES).map(k =>
+    `<button class="filter-btn${currentCat===k?' active':''}" data-cat="${k}" onclick="setCat('${k}')">${catLabel(k)}</button>`
+  ).join('');
+}
+
+function setCat(cat) {
+  currentCat = cat;
+  renderFilters();
+  renderGrid();
+}
+
+function buildCategorySelect() {
+  const sel = document.getElementById('f-cat');
+  sel.innerHTML = Object.keys(CATEGORIES).filter(k=>k!=='all').map(k =>
+    `<option value="${k}">${catLabel(k)}</option>`
+  ).join('');
+}
+
+// ─── GRID ────────────────────────────────────────────────────────────────────
+function renderGrid() {
+  const query = document.getElementById('search-input').value.toLowerCase().trim();
+  const grid = document.getElementById('food-grid');
+  const noRes = document.getElementById('no-results');
+
+  const filtered = foods.filter(f => {
+    const matchCat = currentCat === 'all' || f.cat === currentCat;
+    const matchQ = !query || f.ar.includes(query) || f.en.toLowerCase().includes(query);
+    return matchCat && matchQ;
+  });
+
+  grid.querySelectorAll('.food-card').forEach(c => c.remove());
+  noRes.style.display = filtered.length ? 'none' : 'block';
+  if (!filtered.length) {
+    if (currentLang === 'ar') noRes.innerHTML = '<span class="nr-icon">🔍</span>لا توجد نتائج';
+    else noRes.innerHTML = '<span class="nr-icon">🔍</span>No results found';
+  }
+
+  filtered.forEach(f => {
+    const density = calPer100g(f);
+    const card = document.createElement('div');
+    card.className = 'food-card' + (selected[f.id] ? ' selected' : '');
+    card.dataset.id = f.id;
+    card.dataset.cat = f.cat;
+    const densityTag = density
+      ? `<span class="macro-tag kcalg">${density} kcal/100g</span>`
+      : '';
+    const isCustom = f.id >= 200;
+    const deleteBtn = isCustom
+      ? `<button class="card-del-btn" onclick="event.stopPropagation();deleteFood(${f.id})" title="حذف">✕</button>`
+      : '';
+    const customBadge = isCustom ? `<span class="custom-badge">custom</span>` : '';
+    card.innerHTML = `
+      ${deleteBtn}
+      <div class="food-emoji">${f.emoji}</div>
+      <div class="food-name">${currentLang === 'ar' ? f.ar : f.en}</div>
+      <div class="food-name-en">${currentLang === 'ar' ? f.en : f.ar}</div>
+      <div class="food-macros">
+        <span class="macro-tag protein">${f.protein}g</span>
+        <span class="macro-tag cal">${f.cal} kcal</span>
+        ${densityTag}
+      </div>
+      ${customBadge}`;
+    card.addEventListener('click', () => toggleFood(f.id));
+    grid.appendChild(card);
+  });
+
+  updateStats();
+}
+
+// ─── SELECTION ───────────────────────────────────────────────────────────────
+function toggleFood(id) {
+  if (selected[id] !== undefined) {
+    delete selected[id];
+  } else {
+    const f = foods.find(x => x.id === id);
+    selected[id] = f ? f.weight : 100; // default to food's serving weight
+  }
+  renderGrid();
+  renderSelected();
+}
+
+function setWeight(id, val) {
+  const w = Math.max(1, parseInt(val) || 1);
+  selected[id] = w;
+  // live-update just this item's macros
+  const f = foods.find(x => x.id === id);
+  if (!f) return;
+  const scaledProtein = Math.round((f.protein / f.weight) * w);
+  const scaledCal     = Math.round((f.cal     / f.weight) * w);
+  const item = document.getElementById('sel-item-' + id);
+  if (item) {
+    item.querySelector('.sel-macro-protein').textContent = scaledProtein + 'g protein';
+    item.querySelector('.sel-macro-cal').textContent     = scaledCal + ' kcal';
+  }
+  recalcTotals();
+}
+
+function removeSelected(id) {
+  delete selected[id];
+  renderGrid();
+  renderSelected();
+}
+
+function renderSelected() {
+  const list = document.getElementById('selected-list');
+  const empty = document.getElementById('empty-msg');
+  const ids = Object.keys(selected).map(Number);
+
+  if (!ids.length) {
+    list.innerHTML = '';
+    empty.style.display = 'block';
+    if (currentLang === 'ar')
+      empty.innerHTML = '<span class="empty-icon">🥗</span>اختر أطباقاً من القائمة';
+    else
+      empty.innerHTML = '<span class="empty-icon">🥗</span>Pick dishes from the list';
+    updateTotals(0, 0);
+    return;
+  }
+  empty.style.display = 'none';
+
+  list.innerHTML = ids.map(id => {
+    const f = foods.find(x => x.id === id);
+    if (!f) return '';
+    const grams = selected[id];
+    const scaledProtein = Math.round((f.protein / f.weight) * grams);
+    const scaledCal     = Math.round((f.cal     / f.weight) * grams);
+    const wLabel = currentLang === 'ar' ? 'جم' : 'g';
+    return `<li id="sel-item-${id}">
+      <div class="sel-info">
+        <div class="sel-name">${f.emoji} ${currentLang==='ar'?f.ar:f.en}</div>
+        <div class="sel-macros">
+          <span class="sel-macro-protein">${scaledProtein}g protein</span>
+          <span class="sel-macro-sep">·</span>
+          <span class="sel-macro-cal">${scaledCal} kcal</span>
+        </div>
+      </div>
+      <div class="sel-right">
+        <div class="weight-input-wrap">
+          <input
+            class="weight-input"
+            type="number"
+            min="1"
+            max="9999"
+            value="${grams}"
+            oninput="setWeight(${id}, this.value)"
+          >
+          <span class="weight-unit">${wLabel}</span>
+        </div>
+        <button class="del-btn" onclick="removeSelected(${id})">✕</button>
+      </div>
+    </li>`;
+  }).join('');
+
+  recalcTotals();
+}
+
+function recalcTotals() {
+  const ids = Object.keys(selected).map(Number);
+  let tp = 0, tc = 0, totalW = 0;
+  ids.forEach(id => {
+    const f = foods.find(x => x.id === id);
+    if (!f) return;
+    const grams = selected[id];
+    tp += (f.protein / f.weight) * grams;
+    tc += (f.cal     / f.weight) * grams;
+    totalW += grams;
+  });
+  updateTotals(Math.round(tp), Math.round(tc), totalW);
+}
+
+function updateTotals(p, c, totalW) {
+  document.getElementById('total-protein').textContent = p + 'g';
+  document.getElementById('total-cal').textContent = c;
+  document.getElementById('stat-protein').textContent = p + 'g';
+  document.getElementById('stat-cal').textContent = c;
+  document.getElementById('stat-selected').textContent = Object.keys(selected).length;
+
+  document.getElementById('total-density').textContent =
+    (totalW && c) ? Math.round((c / totalW) * 100) + ' kcal/100g' : '—';
+}
+
+function updateStats() {
+  document.getElementById('stat-dishes').textContent = foods.length;
+}
+
+// ─── DENSITY PREVIEW IN FORM ──────────────────────────────────────────────────
+function previewDensity() {
+  const cal = parseFloat(document.getElementById('f-cal').value) || 0;
+  const w   = parseFloat(document.getElementById('f-weight').value) || 0;
+  const hint = document.getElementById('density-preview');
+  if (cal > 0 && w > 0) {
+    const d = Math.round((cal / w) * 100);
+    hint.textContent = currentLang === 'ar'
+      ? `⚡ الكثافة السعرية: ${d} kcal/100g`
+      : `⚡ Calorie density: ${d} kcal/100g`;
+    hint.classList.add('visible');
+  } else {
+    hint.classList.remove('visible');
+  }
+}
+
+// ─── ADD DISH ────────────────────────────────────────────────────────────────
+function addDish() {
+  const ar     = document.getElementById('f-name-ar').value.trim();
+  const en     = document.getElementById('f-name-en').value.trim();
+  const prot   = parseFloat(document.getElementById('f-protein').value) || 0;
+  const cal    = parseFloat(document.getElementById('f-cal').value) || 0;
+  const weight = parseFloat(document.getElementById('f-weight').value) || 0;
+  const emoji  = document.getElementById('f-emoji').value.trim() || '🍽';
+  const cat    = document.getElementById('f-cat').value;
+
+  if (!ar && !en) {
+    showToast(currentLang==='ar' ? '⚠ أدخل اسم الطبق' : '⚠ Enter a dish name', '#c94f27');
+    return;
+  }
+
+  const dish = {
+    id: nextId++, emoji,
+    ar: ar || en, en: en || ar,
+    protein: Math.round(prot),
+    cal: Math.round(cal),
+    weight: Math.round(weight),
+    cat
+  };
+  foods.push(dish);
+  saveCustomFoods();
+
+  ['f-name-ar','f-name-en','f-protein','f-cal','f-weight'].forEach(id =>
+    document.getElementById(id).value = ''
+  );
+  document.getElementById('f-emoji').value = '';
+  document.getElementById('density-preview').classList.remove('visible');
+
+  renderFilters();
+  renderGrid();
+  updateStats();
+  showToast(currentLang==='ar' ? `✓ تمت إضافة "${dish.ar}"` : `✓ Added "${dish.en}"`);
+}
+
+function deleteFood(id) {
+  const f = foods.find(x => x.id === id);
+  if (!f) return;
+  foods = foods.filter(x => x.id !== id);
+  delete selected[id];
+  saveCustomFoods();
+  renderFilters();
+  renderGrid();
+  renderSelected();
+  updateStats();
+  showToast(currentLang==='ar' ? `🗑 تم حذف "${f.ar}"` : `🗑 Deleted "${f.en}"`, '#c94f27');
+}
+
+function showToast(msg, color) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.style.background = color || 'var(--green)';
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2800);
+}
+
+// ─── SEARCH ──────────────────────────────────────────────────────────────────
+document.getElementById('search-input').addEventListener('input', renderGrid);
+
+// ─── INIT ─────────────────────────────────────────────────────────────────────
+loadCustomFoods();
+buildCategorySelect();
+renderFilters();
+renderGrid();
+</script>
+</body>
+</html>
